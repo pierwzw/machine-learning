@@ -25,7 +25,7 @@ def file2matrix(filename):
     fr = open(filename)
     arrayOLines:list = fr.readlines()
     numberOfLines:int = len(arrayOLines)
-    returnMat = zeros((numberOfLines, 3))
+    returnMat = zeros((numberOfLines, 3))#生成nxn的零矩阵
     classLableVector:list = []
     index = 0
     for line in arrayOLines:
@@ -35,6 +35,20 @@ def file2matrix(filename):
         classLableVector.append(int(listFromLine[-1]))
         index += 1
     return returnMat, classLableVector
+
+def autoNorm(dataSet):
+    minVals = dataSet.min(0)#0取每列，1取每行
+    maxVals = dataSet.max(0)
+    ranges = maxVals - minVals
+    normDataSet = zeros(shape(dataSet))
+    m = dataSet.shape[0]
+    normDataSet = dataSet - tile(minVals, (m, 1))
+    normDataSet = normDataSet/tile(ranges, (m, 1))
+    return normDataSet, ranges, minVals
+
+
+
+
 
 
 
