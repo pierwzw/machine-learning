@@ -5,11 +5,13 @@ from ch2_knn import kNN
 
 group, lables = kNN.createDataSet()
 
-datingDataMat, datingLables = kNN.file2matrix('..\ch2_knn\datedata\datingTestSet2.txt')
+datingDataMat, datingLables = kNN.file2matrix('datedata\datingTestSet2.txt')
 
 #print(datingDataMat, '\n', datingLables)
 
-fig = plt.figure()
+fig = plt.figure(figsize=(6, 6))
 #ax = fig.add_subplot(111)
 plt.scatter(datingDataMat[:, 1], datingDataMat[:, 2])
 plt.show
+
+
