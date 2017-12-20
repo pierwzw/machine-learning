@@ -1,17 +1,25 @@
-from  ch3_decisiontree import trees
+from  ch3_decisiontree import trees, treePlotter
 
-myDat, lables = trees.createDateSet()
+treePlotter.createPlot()
+# myDat, lables = trees.createDateSet()
+#
+# myTree = trees.createTree(myDat, lables)
 
-print(myDat)
+#print(myTree)
+# bestFeatureIndex = trees.chooseBestFeatureToSplit(myDat)
+#
+# print(myDat,'\n',bestFeatureIndex)
 
-shannonEnt = trees.calcShannonEnt(myDat)
-print(shannonEnt)
-
-shannonEnt = trees.calcShannonEnt2(myDat)
-print(shannonEnt)
-
-giniIndex = trees.calcGiniIndex(myDat)
-print(giniIndex)
-
-giniIndex = trees.calcGiniIndex2(myDat)
-print(giniIndex)
+# print(myDat)
+#
+# shannonEnt = trees.calcShannonEnt(myDat)
+# print(shannonEnt)
+#
+# shannonEnt = trees.calcShannonEnt2(myDat)
+# print(shannonEnt)
+#
+# giniIndex = trees.calcGiniIndex(myDat)
+# print(giniIndex)
+#
+# giniIndex = trees.calcGiniIndex2(myDat)
+# print(giniIndex)
