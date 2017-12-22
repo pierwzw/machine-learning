@@ -175,6 +175,16 @@ def createTree(dataSet, lables):
 
 
 def classify(inputTree, featLables, testVec):
+    """
+    使用决策树的分类函数
+    :param inputTree:
+    :param featLables:
+    :param testVec:
+    :return:
+    """
+
+    #没有属性可以匹配时返回默认的分类：no
+    classLable = 'no'
     firstStr = list(inputTree.keys())[0]
     secondDict = inputTree[firstStr]
     featIndex = featLables.index(firstStr)
@@ -185,6 +195,38 @@ def classify(inputTree, featLables, testVec):
             else:
                 classLable = secondDict[key]
     return classLable
+
+
+def storeTree(inputTree, filename):
+    """
+    序列化树到磁盘，因为创建决策树很耗时，即使是很小的数据集
+    :param inputTree:
+    :param filename:
+    :return:
+    """
+
+    import pickle
+    #2中用'w',3中用'wb'
+    # a+ 可读写模式，写只能写在文件末尾
+    #w+ 可读写，与a+的区别是要清空文件内容
+    #r+ 可读写，与a+的区别是可以写到文件任何位置
+    fw = open(filename, 'wb+')
+    pickle.dump(inputTree, fw)
+    fw.close()
+
+
+def grabTree(filename):
+    """
+    从磁盘中反序列化决策树
+    :param filename:
+    :return:
+    """
+
+    import pickle
+    fr = open(filename,'rb')#yeah, work on!
+    #fr = open(filename, 'r', encoding='UTF-8'):Oops! can't work!
+    return pickle.load(fr)
+
 
 
 

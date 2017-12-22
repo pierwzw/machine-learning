@@ -1,8 +1,14 @@
 from  ch3_decisiontree import trees, treePlotter
 
+myDat, lables = trees.createDateSet()
 myTree = treePlotter.retrieveTree(0)
+trees.storeTree(myTree, 'c:\\tree.txt')
+mytree = trees.grabTree('c:\\tree.txt')
+print(mytree)
+# lable = trees.classify(myTree, lables, [1, 2])
+# print(lable)
 #myTree['no surfacing'][3] = 'maybe'
-treePlotter.createPlot(myTree)
+#treePlotter.createPlot(myTree)
 # print(myTree)
 # leafs = treePlotter.getNumLeafs(myTree)
 # print(leafs)
