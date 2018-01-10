@@ -1,5 +1,6 @@
 from numpy import *
-
+import re
+import operator
 
 def loadDataSet():
     """
@@ -86,7 +87,7 @@ def trainNB0(trainMatrix, trainCategory):
     # 数则可能会出现，而此例中词典词数和训练词数相同
     #p0Num, p1Num = zeros(numWords), zeros(numWords)
     p0Num, p1Num = ones(numWords), ones(numWords)
-    p0Denom, p1Denom = 0.0, 0.0
+    p0Denom, p1Denom = 2.0, 2.0#修正这2.0之前为0.0
     for i in range(numTrainDocs):
         if trainCategory[i] == 1:
             p1Num += trainMatrix[i]
@@ -136,3 +137,199 @@ def testingNB(testDoc):
     # 必须使用array，否则不能使用内积
     docVec = array(setOfWords2Vec(myVoacbList, testDoc))
     return classifyNB(docVec, p0V, p1V, pAb)
+
+
+def bagOfWord2VecMN(vocabList, inputSet):
+    """
+    朴素贝叶斯词袋模型
+    :param vocalList:
+    :param inputSet:
+    :return:
+    """
+
+    returnVec = [0]*len(vocabList)
+    for word in inputSet:
+        if word in vocabList:
+            returnVec[vocabList.index(word)] += 1
+    return returnVec
+
+
+def textparse(bigString):
+    """
+    文件解析
+    :param bigString:
+    :return:
+    """
+    #不能为\W*会导致空匹配异常
+    listOfTokens = re.split(r'\W+', bigString)
+    return [tok.lower() for tok in listOfTokens if len(tok) > 2]
+
+
+def spamTest():
+    """
+    垃圾邮件测试函数
+    注：此法为留出法，需多次计算取平均，若要更精确，可以使用k折
+    :return:
+    """
+
+    docList, classList, fullText = [], [], []
+    for i in range(1, 26):
+        wordList = textparse(open('email\\spam\\%d.txt' % i).read())
+        docList.append(wordList)
+        fullText.extend(wordList)
+        #1为垃圾邮件， 0为非垃圾邮件
+        classList.append(1)
+        #有不可识别的符号
+        wordList = textparse(open('email\\ham\\%d.txt' % i, encoding='gb18030', errors='ignore').read())
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList.append(0)
+    vocabList = createVocabList(docList)
+    #vocabList = list(set(fullText))
+    #python3中range不返回list
+    trainingSet, testSet = list(range(50)), []
+    #随机构建训练集(而不是测试集)
+    for i in range(10):
+        #uniform生成(m,n)之间的实数
+        randIndex = int(random.uniform(0, len(trainingSet)))
+        testSet.append(trainingSet[randIndex])
+        del (trainingSet[randIndex])
+    trainMat, trainClasses = [], []
+    for docIndex in trainingSet:
+        #trainMat为每一篇文章中词的个数
+        trainMat.append(bagOfWord2VecMN(vocabList, docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    p0V, p1V, pSpam = trainNB0(array(trainMat), array(trainClasses))
+    errorCount = 0
+    for docIndex in testSet:
+        wordVector = bagOfWord2VecMN(vocabList, docList[docIndex])
+        if classifyNB(array(wordVector), p0V, p1V, pSpam) != classList[docIndex]:
+            errorCount += 1
+    return float(errorCount)/len(testSet)
+
+
+def calcMostFreg(vocabList, fullText):
+    """
+    高频词去除函数
+    :param vocabList:
+    :param fullText:
+    :return:
+    """
+
+    freqDict = {}
+    for token in vocabList:
+        freqDict[token] = fullText.count(token)
+    sortedFreq = sorted(freqDict.items(), key = operator.itemgetter(1), reverse=True)
+    return sortedFreq[:30]
+
+
+def removeStopedWords(vocabList):
+    """
+    去除停用词函数
+    :param vocabList:
+    :return:
+    """
+
+    stopedWordsList = open('stopword.txt', 'r').readlines()
+    print(len(vocabList))
+    stopedWordsList = [word.strip() for word in stopedWordsList]
+    for word in vocabList:
+        if word in stopedWordsList:
+            vocabList.remove(word)
+    print(len(vocabList))
+    return vocabList
+
+
+def localWords(feed1, feed0):
+    """
+    RSS源分类器
+    此处错误率为占所有用词的百分比
+    :param feed1:
+    :param feed0:
+    :return:
+    """
+
+    import feedparser
+    docList, classList, fullText = [], [], []
+    minLen = min(len(feed1.entries), len(feed0.entries))
+    for i in range(minLen):
+        wordList = textparse(feed1.entries[i].summary)
+        docList.append((wordList))
+        fullText.extend(wordList)
+        classList.append(1)
+        wordList = textparse(feed0.entries[i].summary)
+        docList.append((wordList))
+        fullText.extend(wordList)
+        classList.append(0)
+    vocabList = createVocabList(docList)
+    top30Words = calcMostFreg(vocabList, fullText)
+    for pairW in top30Words:
+        if pairW[0] in vocabList:
+            vocabList.remove(pairW[0])
+    #去除停用词
+    vocabList = removeStopedWords(vocabList)
+    trainingSet, testSet = list(range(2*minLen)), []
+    for i in range(20):
+        randIndex = int(random.uniform(0, len(trainingSet)))
+        testSet.append(trainingSet[randIndex])
+        del (trainingSet[randIndex])
+    trainMat, trainClasses = [], []
+    for docIndex in trainingSet:
+        #trainMat为每一篇文章中词的个数
+        trainMat.append(bagOfWord2VecMN(vocabList, docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    p0V, p1V, pSpam = trainNB0(array(trainMat), array(trainClasses))
+    errorCount = 0
+    for docIndex in testSet:
+        wordVector = bagOfWord2VecMN(vocabList, docList[docIndex])
+        if classifyNB(array(wordVector), p0V, p1V, pSpam) != classList[docIndex]:
+            errorCount += 1
+    print('the error rate is : ', float(errorCount)/len(testSet))
+    return vocabList, p0V, p1V, float(errorCount)/len(testSet)
+
+
+def getTopWords(ny, sf):
+    """
+    最具表征性的词汇显示函数
+    :param ny:
+    :param sf:
+    :return:
+    """
+
+    vocabList, p0V, p1V, errorRate = localWords(ny, sf)
+    topNY, topSF = [], []
+    for i in range(len(p0V)):
+        if p0V[i] > -6.0:
+            topSF.append((vocabList[i], p0V[i]))
+        if p1V[i] > -6.0:
+            topNY.append((vocabList[i], p1V[i]))
+    sortedSF = sorted(topSF, key=lambda pair:pair[1], reverse=True)
+    print('SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**')
+    for item in sortedSF:
+        print(item[0])
+    sortedNY = sorted(topNY, key=lambda pair:pair[1], reverse=True)
+    print('NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**')
+    for item in sortedNY:
+        print(item[0])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
