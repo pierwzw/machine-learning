@@ -70,6 +70,29 @@ def gradAscent2(dataMatrix, classLables):
     """
 
     m, n = shape(dataMatrix)
+    dataMatrix = mat(dataMatrix)
+    #alpha为步长
+    alpha = 0.01
+    # weight即为回归系数初始化为1,为nx1,n为特征数
+    weight = mat(ones(n))
+    maxCycles = 500
+    for i in range(maxCycles):
+        randIndex = int(random.uniform(0, m))
+        h = sigmoid(dataMatrix[randIndex] * weight.T)
+        error = classLables[randIndex] - h
+        weight += alpha * error * dataMatrix[randIndex]
+    return weight.tolist()[0]
+
+
+def gradAscent3(dataMatrix, classLables):
+    """
+    Logistic回归随机梯度上升优化算法(采用sigmoid为性能度量)
+    :param dataMatIn:
+    :param classLables:
+    :return:
+    """
+
+    m, n = shape(dataMatrix)
     #alpha为步长
     alpha = 0.01
     # weight即为回归系数初始化为1,为nx1,n为特征数
@@ -77,9 +100,9 @@ def gradAscent2(dataMatrix, classLables):
     maxCycles = 500
     for i in range(maxCycles):
         randIndex = int(random.uniform(0, m))
-        h = sigmoid(dataMatrix[randIndex].dot(weight))
+        h = sigmoid(sum(dataMatrix[randIndex] * weight))
         error = classLables[randIndex] - h
-        weight += alpha * dataMatrix[randIndex].T * error
+        weight += array(alpha * error) * dataMatrix[randIndex]
     return weight
 
 
@@ -97,8 +120,11 @@ def leastSquare(xArr, yArr):
     xTx = xMat.T * xMat
     if linalg.det(xTx) == 0.0:
         return
-    ws = xTx.T * (xMat.T * yMat)
-    return ws
+    ws = xTx.I * (xMat.T * yMat)
+    return [k[0] for k in ws.tolist()]
+
+
+
 
 
 
